@@ -29,6 +29,11 @@ categories:
     description: "Autonomous agent patterns"
     color: "#8B5CF6"
 
+  abstraction:
+    name: "Agent Abstraction Layer"
+    description: "The programmable layer for stochastic, fallible, unintelligible entities"
+    color: "#EC4899"
+
   advanced:
     name: "Advanced"
     description: "Production patterns and optimization"
@@ -192,6 +197,64 @@ nodes:
     estimated_time: "120 min"
     difficulty: 5
 
+  # === AGENT ABSTRACTION LAYER ===
+  # The new programmable layer for AI entities
+  aal-primitives:
+    category: abstraction
+    name: "AAL Primitives"
+    description: "Core abstractions: AgentEntity, Context, Permissions, Memory"
+    prerequisites: [agent-loop]
+    estimated_time: "60 min"
+    difficulty: 4
+
+  aal-uncertainty:
+    category: abstraction
+    name: "Uncertainty Management"
+    description: "Handle stochasticity with confidence scores and multi-path exploration"
+    prerequisites: [aal-primitives]
+    estimated_time: "75 min"
+    difficulty: 5
+
+  aal-fallibility:
+    category: abstraction
+    name: "Fallibility Handling"
+    description: "Error classification, recovery strategies, graceful degradation"
+    prerequisites: [aal-primitives, error-handling]
+    estimated_time: "60 min"
+    difficulty: 4
+
+  aal-observability:
+    category: abstraction
+    name: "Agent Observability"
+    description: "Tracing, decision logging, behavioral fingerprinting, drift detection"
+    prerequisites: [aal-primitives, monitoring]
+    estimated_time: "75 min"
+    difficulty: 5
+
+  aal-manifest:
+    category: abstraction
+    name: "Agent Manifests"
+    description: "Unified specification for agent identity, permissions, tools, and behavior"
+    prerequisites: [aal-primitives]
+    estimated_time: "45 min"
+    difficulty: 4
+
+  aal-runtime:
+    category: abstraction
+    name: "Agent Runtime"
+    description: "Complete runtime orchestrating all AAL components"
+    prerequisites: [aal-uncertainty, aal-fallibility, aal-observability, aal-manifest]
+    estimated_time: "90 min"
+    difficulty: 5
+
+  aal-integrations:
+    category: abstraction
+    name: "AAL Integrations"
+    description: "MCP, LSP, IDE integrations, hooks, and workflows"
+    prerequisites: [aal-runtime]
+    estimated_time: "120 min"
+    difficulty: 5
+
   # === ADVANCED ===
   error-handling:
     category: advanced
@@ -269,6 +332,13 @@ challenges:
     description: "Build a fully autonomous task-completing agent"
     required_nodes: [agent-loop, agent-state, agent-planning]
     optional_nodes: [multi-agent, monitoring]
+    difficulty: 5
+
+  production-agent:
+    name: "Production Agent"
+    description: "Build a production-ready agent with full AAL integration"
+    required_nodes: [aal-runtime, aal-integrations]
+    optional_nodes: [multi-agent]
     difficulty: 5
 
 # Blueprint prerequisites - which nodes are needed for each blueprint
