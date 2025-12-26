@@ -74,14 +74,25 @@ This roadmap outlines the evolution of Claude App Forge from initial prototype t
 - [x] Validation criteria automation (validate_blueprint.py)
 - [x] Blueprint selection wizard (wizard.py with interactive recommendation)
 
-### v0.4.0 - Validation Maturity
+### v0.4.0 - Validation Maturity ✓
+*Completed*
 
 **Focus**: Robust validation system
 
-- [ ] Full SDK version matrix testing
-- [ ] Automated validation on PR
-- [ ] Freshness badge generation
-- [ ] Validation report dashboard
+**SDK Testing:**
+- [x] Full SDK version matrix testing (matrix_test.py)
+- [x] Multi-version compatibility checks
+- [x] Automated test environment creation
+
+**CI/CD:**
+- [x] Automated validation on PR (GitHub Actions workflow)
+- [x] Syntax validation across Python versions
+- [x] Scheduled weekly validation runs
+
+**Reporting:**
+- [x] Freshness badge generation (SVG and JSON endpoints)
+- [x] Validation report dashboard (HTML dashboard generator)
+- [x] Shields.io compatible badge format
 
 ### v0.5.0 - Developer Experience
 
