@@ -94,14 +94,22 @@ This roadmap outlines the evolution of Claude App Forge from initial prototype t
 - [x] Validation report dashboard (HTML dashboard generator)
 - [x] Shields.io compatible badge format
 
-### v0.5.0 - Developer Experience
+### v0.5.0 - Developer Experience ✓
+*Completed*
 
 **Focus**: Smooth onboarding
 
-- [ ] Interactive CLI setup wizard
-- [ ] Progress tracking commands
-- [ ] Session resume capability
-- [ ] Improved error messages
+**CLI Tools:**
+- [x] Interactive CLI setup wizard (setup_wizard.py)
+- [x] Progress tracking commands (progress.py)
+- [x] Session resume capability (session.py)
+- [x] Improved error messages (errors.py)
+
+**Features:**
+- Interactive setup with prerequisite checking
+- Progress visualization with bars and statistics
+- Session management with notes, bookmarks, and time tracking
+- Comprehensive error catalog with solutions and examples
 
 ---
 
