@@ -33,29 +33,29 @@ This roadmap outlines the evolution of Claude App Forge from initial prototype t
 - [x] Journal template structure
 - [x] Publication pipeline basics
 
-### v0.2.0 - Content Expansion 🚧
-*In Progress*
+### v0.2.0 - Content Expansion ✓
+*Completed*
 
 **Focus**: Complete fundamental curriculum
 
 **Fundamentals Nodes (4/4 complete):**
-- [x] sdk-setup - README and example complete
-- [x] api-keys - README and example complete
-- [x] first-message - README and example complete
-- [x] model-selection - README and example complete
+- [x] sdk-setup - README, example, and exercises
+- [x] api-keys - README, example, and exercises
+- [x] first-message - README, example, and exercises
+- [x] model-selection - README, example, and exercises
 
 **Messaging Nodes (6/6 complete):**
-- [x] message-structure - README and example complete
-- [x] system-prompts - README and example complete
-- [x] streaming - README and example complete
-- [x] multi-turn - README and example complete
-- [x] context-management - README and example complete
-- [x] vision - README and example complete
+- [x] message-structure - README, example, and exercises
+- [x] system-prompts - README, example, and exercises
+- [x] streaming - README, example, and exercises
+- [x] multi-turn - README, example, and exercises
+- [x] context-management - README, example, and exercises
+- [x] vision - README, example, and exercises
 
 **Infrastructure:**
-- [ ] Interactive exercises for each node (examples complete, exercises pending)
-- [ ] Node validation tests
-- [ ] Cross-reference documentation
+- [x] Interactive exercises for each node
+- [x] Node validation tests (pytest framework)
+- [x] Cross-reference documentation (learning paths, node relationships)
 
 ### v0.3.0 - Blueprint Polish
 
