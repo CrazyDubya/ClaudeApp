@@ -33,13 +33,27 @@ This roadmap outlines the evolution of Claude App Forge from initial prototype t
 - [x] Journal template structure
 - [x] Publication pipeline basics
 
-### v0.2.0 - Content Expansion
+### v0.2.0 - Content Expansion 🚧
+*In Progress*
 
 **Focus**: Complete fundamental curriculum
 
-- [ ] All fundamentals nodes with examples
-- [ ] All messaging nodes with examples
-- [ ] Interactive exercises for each node
+**Fundamentals Nodes (2/4 complete):**
+- [x] sdk-setup - README and example complete
+- [ ] api-keys - Not yet created
+- [x] first-message - README and example complete
+- [ ] model-selection - Not yet created
+
+**Messaging Nodes (1/6 complete):**
+- [ ] message-structure - Not yet created
+- [ ] system-prompts - Not yet created
+- [x] streaming - README and example complete
+- [ ] multi-turn - Not yet created
+- [ ] context-management - Not yet created
+- [ ] vision - Not yet created
+
+**Infrastructure:**
+- [ ] Interactive exercises for each node (partial - basic examples only)
 - [ ] Node validation tests
 - [ ] Cross-reference documentation
 
@@ -577,4 +591,4 @@ This roadmap is a living document. To propose changes:
 
 ---
 
-*Last updated: December 2024*
+*Last updated: December 2025*
