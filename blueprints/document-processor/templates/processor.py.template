@@ -1,0 +1,258 @@
+"""
+Document Processor - Core Logic
+
+This module contains the main processor class that handles
+document analysis with Claude and tools.
+"""
+
+import json
+from typing import Optional
+from anthropic import Anthropic
+
+from config import Config
+from tools import EXTRACTION_TOOLS, get_tool_definitions
+
+
+class DocumentProcessor:
+    """
+    A document processor powered by Claude with tool use.
+
+    This class handles:
+    - Document extraction, summarization, and classification
+    - Tool-based structured output
+    - Chunking for large documents
+    """
+
+    def __init__(self, config: Config):
+        """
+        Initialize the processor.
+
+        Args:
+            config: Application configuration
+        """
+        self.config = config
+        self.client = Anthropic()
+
+    def extract(
+        self,
+        document: str,
+        schema: Optional[dict] = None,
+        entity_types: Optional[list[str]] = None,
+    ) -> dict:
+        """
+        Extract structured information from a document.
+
+        Args:
+            document: The document text
+            schema: Optional custom extraction schema
+            entity_types: Types of entities to extract
+
+        Returns:
+            Extracted information as a dictionary
+        """
+        # Build tools based on schema or defaults
+        tools = get_tool_definitions(schema) if schema else EXTRACTION_TOOLS
+
+        # Build prompt
+        prompt = self._build_extraction_prompt(document, entity_types)
+
+        # Call Claude with tools
+        response = self.client.messages.create(
+            model=self.config.model,
+            max_tokens=self.config.max_tokens,
+            system=self.config.extraction_system_prompt,
+            tools=tools,
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+        # Extract results from tool calls
+        return self._process_tool_results(response)
+
+    def summarize(
+        self,
+        document: str,
+        style: str = "concise",
+        max_length: Optional[int] = None,
+    ) -> dict:
+        """
+        Summarize a document.
+
+        Args:
+            document: The document text
+            style: Summary style (concise, detailed, bullet_points)
+            max_length: Maximum summary length in words
+
+        Returns:
+            Summary result
+        """
+        tools = [
+            {
+                "name": "provide_summary",
+                "description": "Provide a structured summary of the document",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "summary": {
+                            "type": "string",
+                            "description": "The document summary",
+                        },
+                        "key_points": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Key points from the document",
+                        },
+                        "word_count": {
+                            "type": "integer",
+                            "description": "Word count of the summary",
+                        },
+                    },
+                    "required": ["summary", "key_points"],
+                },
+            }
+        ]
+
+        prompt = f"""Summarize the following document.
+Style: {style}
+{f'Maximum length: {max_length} words' if max_length else ''}
+
+Document:
+{document}
+
+Use the provide_summary tool to structure your response."""
+
+        response = self.client.messages.create(
+            model=self.config.model,
+            max_tokens=self.config.max_tokens,
+            tools=tools,
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+        return self._process_tool_results(response)
+
+    def classify(
+        self,
+        document: str,
+        categories: Optional[list[str]] = None,
+    ) -> dict:
+        """
+        Classify a document.
+
+        Args:
+            document: The document text
+            categories: Optional list of valid categories
+
+        Returns:
+            Classification result
+        """
+        tools = [
+            {
+                "name": "classify_document",
+                "description": "Classify the document type and category",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "document_type": {
+                            "type": "string",
+                            "description": "The type of document",
+                        },
+                        "category": {
+                            "type": "string",
+                            "description": "Primary category",
+                            **({"enum": categories} if categories else {}),
+                        },
+                        "confidence": {
+                            "type": "number",
+                            "description": "Confidence score 0-1",
+                        },
+                        "reasoning": {
+                            "type": "string",
+                            "description": "Explanation of classification",
+                        },
+                    },
+                    "required": ["document_type", "category", "confidence"],
+                },
+            }
+        ]
+
+        prompt = f"""Classify the following document.
+{f'Valid categories: {", ".join(categories)}' if categories else ''}
+
+Document:
+{document}
+
+Use the classify_document tool to provide your classification."""
+
+        response = self.client.messages.create(
+            model=self.config.model,
+            max_tokens=self.config.max_tokens,
+            tools=tools,
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+        return self._process_tool_results(response)
+
+    def process_custom(self, document: str, prompt: str) -> dict:
+        """
+        Process a document with a custom prompt.
+
+        Args:
+            document: The document text
+            prompt: Custom processing prompt
+
+        Returns:
+            Processing result
+        """
+        full_prompt = f"""{prompt}
+
+Document:
+{document}"""
+
+        response = self.client.messages.create(
+            model=self.config.model,
+            max_tokens=self.config.max_tokens,
+            messages=[{"role": "user", "content": full_prompt}],
+        )
+
+        return {"result": response.content[0].text}
+
+    def _build_extraction_prompt(
+        self,
+        document: str,
+        entity_types: Optional[list[str]] = None,
+    ) -> str:
+        """Build the extraction prompt."""
+        entities = entity_types or ["people", "organizations", "dates", "amounts"]
+        return f"""Extract information from the following document.
+Focus on: {', '.join(entities)}
+
+Document:
+{document}
+
+Use the appropriate tools to structure your extractions."""
+
+    def _process_tool_results(self, response) -> dict:
+        """Process tool results from the response."""
+        results = {}
+
+        for block in response.content:
+            if block.type == "tool_use":
+                tool_name = block.name
+                tool_input = block.input
+
+                # Merge results from multiple tool calls
+                if tool_name in results:
+                    # Merge if same tool called multiple times
+                    existing = results[tool_name]
+                    for key, value in tool_input.items():
+                        if key in existing and isinstance(existing[key], list):
+                            existing[key].extend(value if isinstance(value, list) else [value])
+                        else:
+                            existing[key] = value
+                else:
+                    results[tool_name] = tool_input
+
+        # If only one tool was used, flatten the results
+        if len(results) == 1:
+            return list(results.values())[0]
+
+        return results

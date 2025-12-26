@@ -1,0 +1,65 @@
+"""
+Document Processor - Configuration
+
+Handles loading and validating configuration.
+"""
+
+import os
+from dataclasses import dataclass
+from typing import Optional
+
+
+@dataclass
+class Config:
+    """Document processor configuration."""
+
+    # Claude settings
+    model: str = "claude-sonnet-4-20250514"
+    max_tokens: int = 4096
+
+    # Processing settings
+    chunk_size: int = 50000  # Characters per chunk
+    chunk_overlap: int = 1000  # Overlap between chunks
+
+    # System prompts
+    extraction_system_prompt: str = """You are a document analysis expert.
+Extract information accurately and completely.
+Use the provided tools to structure your output.
+If information is not present, omit it rather than guessing."""
+
+    summarization_system_prompt: str = """You are a document summarization expert.
+Create clear, accurate summaries that capture the key points.
+Maintain objectivity and accuracy."""
+
+    # Output settings
+    output_format: str = "json"  # json, markdown, text
+
+    # Validation settings
+    strict_mode: bool = False  # Fail on missing required fields
+
+    @classmethod
+    def from_env(cls) -> "Config":
+        """Load configuration from environment variables."""
+        return cls(
+            model=os.environ.get("DOCPROC_MODEL", cls.model),
+            max_tokens=int(os.environ.get("DOCPROC_MAX_TOKENS", cls.max_tokens)),
+            chunk_size=int(os.environ.get("DOCPROC_CHUNK_SIZE", cls.chunk_size)),
+            chunk_overlap=int(os.environ.get("DOCPROC_CHUNK_OVERLAP", cls.chunk_overlap)),
+            output_format=os.environ.get("DOCPROC_OUTPUT_FORMAT", cls.output_format),
+            strict_mode=os.environ.get("DOCPROC_STRICT", "").lower() == "true",
+        )
+
+    def validate(self) -> list[str]:
+        """Validate configuration."""
+        errors = []
+
+        if self.chunk_size < 1000:
+            errors.append("chunk_size must be at least 1000")
+
+        if self.chunk_overlap >= self.chunk_size:
+            errors.append("chunk_overlap must be less than chunk_size")
+
+        if self.output_format not in ["json", "markdown", "text"]:
+            errors.append(f"Invalid output_format: {self.output_format}")
+
+        return errors

@@ -1,0 +1,132 @@
+"""
+Conversational Assistant - Core Logic
+
+This module contains the main assistant class that orchestrates
+conversations with Claude.
+"""
+
+from typing import Generator, Optional
+from anthropic import Anthropic
+
+from config import Config
+from conversation import ConversationManager
+
+
+class ConversationalAssistant:
+    """
+    A conversational assistant powered by Claude.
+
+    This class handles:
+    - Sending messages and receiving responses
+    - Managing conversation history
+    - Applying context strategies
+    - Streaming responses
+    """
+
+    def __init__(self, config: Config):
+        """
+        Initialize the assistant.
+
+        Args:
+            config: Application configuration
+        """
+        self.config = config
+        self.client = Anthropic()
+        self.conversation = ConversationManager(
+            max_history=config.max_history,
+            context_strategy=config.context_strategy,
+        )
+
+        # Load system prompt
+        self.system_prompt = self._load_system_prompt()
+
+    def _load_system_prompt(self) -> str:
+        """Load the system prompt from file or config."""
+        if self.config.system_prompt_file:
+            try:
+                with open(self.config.system_prompt_file) as f:
+                    return f.read().strip()
+            except FileNotFoundError:
+                pass
+
+        return self.config.system_prompt or "You are a helpful assistant."
+
+    def send_message(self, user_input: str) -> str:
+        """
+        Send a message and get a complete response.
+
+        Args:
+            user_input: The user's message
+
+        Returns:
+            The assistant's response
+        """
+        # Add user message to history
+        self.conversation.add_message("user", user_input)
+
+        # Get messages for API call
+        messages = self.conversation.get_messages()
+
+        # Call Claude
+        response = self.client.messages.create(
+            model=self.config.model,
+            max_tokens=self.config.max_tokens,
+            system=self.system_prompt,
+            messages=messages,
+        )
+
+        # Extract response
+        assistant_message = response.content[0].text
+
+        # Add to history
+        self.conversation.add_message("assistant", assistant_message)
+
+        return assistant_message
+
+    def send_message_stream(self, user_input: str) -> Generator[str, None, None]:
+        """
+        Send a message and stream the response.
+
+        Args:
+            user_input: The user's message
+
+        Yields:
+            Chunks of the assistant's response
+        """
+        # Add user message to history
+        self.conversation.add_message("user", user_input)
+
+        # Get messages for API call
+        messages = self.conversation.get_messages()
+
+        # Stream response
+        full_response = ""
+        with self.client.messages.stream(
+            model=self.config.model,
+            max_tokens=self.config.max_tokens,
+            system=self.system_prompt,
+            messages=messages,
+        ) as stream:
+            for text in stream.text_stream:
+                full_response += text
+                yield text
+
+        # Add complete response to history
+        self.conversation.add_message("assistant", full_response)
+
+    def reset(self):
+        """Clear conversation history."""
+        self.conversation.clear()
+
+    def get_history(self) -> list[dict]:
+        """Get the conversation history."""
+        return self.conversation.get_messages()
+
+    def set_system_prompt(self, prompt: str):
+        """Update the system prompt."""
+        self.system_prompt = prompt
+
+    @property
+    def message_count(self) -> int:
+        """Get the number of messages in history."""
+        return len(self.conversation.get_messages())

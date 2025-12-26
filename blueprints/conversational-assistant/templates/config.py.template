@@ -1,0 +1,130 @@
+"""
+Configuration Management
+
+Handles loading and validating configuration from
+environment variables and files.
+"""
+
+import os
+from dataclasses import dataclass, field
+from typing import Optional
+
+
+@dataclass
+class Config:
+    """Application configuration."""
+
+    # Claude settings
+    model: str = "claude-sonnet-4-20250514"
+    max_tokens: int = 4096
+
+    # System prompt
+    system_prompt: Optional[str] = None
+    system_prompt_file: Optional[str] = "prompts/system.txt"
+
+    # Conversation settings
+    max_history: int = 50
+    context_strategy: str = "sliding"  # full, sliding, summary
+
+    # Interface settings
+    interface_type: str = "cli"  # cli, api
+
+    # API settings (if interface_type == "api")
+    api_host: str = "0.0.0.0"
+    api_port: int = 8000
+
+    # Persistence settings
+    persistence_enabled: bool = False
+    persistence_path: Optional[str] = None
+
+    @classmethod
+    def from_env(cls) -> "Config":
+        """
+        Load configuration from environment variables.
+
+        Environment variables:
+            ASSISTANT_MODEL: Claude model to use
+            ASSISTANT_MAX_TOKENS: Maximum response tokens
+            ASSISTANT_SYSTEM_PROMPT: System prompt text
+            ASSISTANT_SYSTEM_PROMPT_FILE: Path to system prompt file
+            ASSISTANT_MAX_HISTORY: Max messages in history
+            ASSISTANT_CONTEXT_STRATEGY: Context strategy
+            ASSISTANT_INTERFACE: Interface type (cli/api)
+            ASSISTANT_API_HOST: API host address
+            ASSISTANT_API_PORT: API port number
+            ASSISTANT_PERSISTENCE: Enable persistence (true/false)
+            ASSISTANT_PERSISTENCE_PATH: Path for persistence
+        """
+        return cls(
+            model=os.environ.get("ASSISTANT_MODEL", cls.model),
+            max_tokens=int(os.environ.get("ASSISTANT_MAX_TOKENS", cls.max_tokens)),
+            system_prompt=os.environ.get("ASSISTANT_SYSTEM_PROMPT"),
+            system_prompt_file=os.environ.get(
+                "ASSISTANT_SYSTEM_PROMPT_FILE", cls.system_prompt_file
+            ),
+            max_history=int(os.environ.get("ASSISTANT_MAX_HISTORY", cls.max_history)),
+            context_strategy=os.environ.get(
+                "ASSISTANT_CONTEXT_STRATEGY", cls.context_strategy
+            ),
+            interface_type=os.environ.get("ASSISTANT_INTERFACE", cls.interface_type),
+            api_host=os.environ.get("ASSISTANT_API_HOST", cls.api_host),
+            api_port=int(os.environ.get("ASSISTANT_API_PORT", cls.api_port)),
+            persistence_enabled=os.environ.get("ASSISTANT_PERSISTENCE", "").lower()
+            == "true",
+            persistence_path=os.environ.get("ASSISTANT_PERSISTENCE_PATH"),
+        )
+
+    @classmethod
+    def from_file(cls, path: str) -> "Config":
+        """
+        Load configuration from a YAML or JSON file.
+
+        Args:
+            path: Path to configuration file
+        """
+        import json
+
+        with open(path) as f:
+            if path.endswith(".json"):
+                data = json.load(f)
+            else:
+                try:
+                    import yaml
+
+                    data = yaml.safe_load(f)
+                except ImportError:
+                    raise ImportError("PyYAML required for YAML config files")
+
+        return cls(**data)
+
+    def validate(self) -> list[str]:
+        """
+        Validate the configuration.
+
+        Returns:
+            List of validation errors (empty if valid)
+        """
+        errors = []
+
+        # Validate model
+        valid_models = [
+            "claude-sonnet-4-20250514",
+            "claude-opus-4-20250514",
+            "claude-3-5-haiku-20241022",
+        ]
+        if self.model not in valid_models:
+            errors.append(f"Invalid model: {self.model}")
+
+        # Validate max_tokens
+        if not (1 <= self.max_tokens <= 8192):
+            errors.append(f"max_tokens must be between 1 and 8192")
+
+        # Validate context_strategy
+        if self.context_strategy not in ["full", "sliding", "summary"]:
+            errors.append(f"Invalid context_strategy: {self.context_strategy}")
+
+        # Validate interface_type
+        if self.interface_type not in ["cli", "api"]:
+            errors.append(f"Invalid interface_type: {self.interface_type}")
+
+        return errors

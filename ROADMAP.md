@@ -57,14 +57,22 @@ This roadmap outlines the evolution of Claude App Forge from initial prototype t
 - [x] Node validation tests (pytest framework)
 - [x] Cross-reference documentation (learning paths, node relationships)
 
-### v0.3.0 - Blueprint Polish
+### v0.3.0 - Blueprint Polish ✓
+*Completed*
 
 **Focus**: Production-ready initial blueprints
 
-- [ ] Complete instantiation templates for both blueprints
-- [ ] Multiple example implementations per blueprint
-- [ ] Validation criteria automation
-- [ ] Blueprint selection wizard
+**Conversational Assistant:**
+- [x] Complete instantiation templates (main.py, assistant.py, conversation.py, config.py)
+- [x] Multiple examples (simple_cli.py, web_api.py, persistent_chat.py)
+
+**Document Processor:**
+- [x] Complete instantiation templates (main.py, processor.py, tools.py, config.py)
+- [x] Multiple examples (simple_extractor.py, contract_analyzer.py, invoice_processor.py)
+
+**Infrastructure:**
+- [x] Validation criteria automation (validate_blueprint.py)
+- [x] Blueprint selection wizard (wizard.py with interactive recommendation)
 
 ### v0.4.0 - Validation Maturity
 

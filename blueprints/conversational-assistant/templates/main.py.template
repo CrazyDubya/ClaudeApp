@@ -1,0 +1,82 @@
+"""
+Conversational Assistant - Main Entry Point
+
+Generated from the conversational-assistant blueprint.
+Customize this file for your specific use case.
+"""
+
+import os
+import sys
+
+from assistant import ConversationalAssistant
+from config import Config
+
+
+def main():
+    """Main entry point for the conversational assistant."""
+    # Load configuration
+    config = Config.from_env()
+
+    # Create assistant
+    assistant = ConversationalAssistant(config)
+
+    # Run the appropriate interface
+    if config.interface_type == "cli":
+        run_cli(assistant)
+    elif config.interface_type == "api":
+        run_api(assistant, config)
+    else:
+        print(f"Unknown interface type: {config.interface_type}")
+        sys.exit(1)
+
+
+def run_cli(assistant: ConversationalAssistant):
+    """Run the CLI interface."""
+    print("=" * 50)
+    print("Conversational Assistant")
+    print("=" * 50)
+    print("Type 'quit' to exit, 'reset' to clear history")
+    print()
+
+    while True:
+        try:
+            user_input = input("You: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\nGoodbye!")
+            break
+
+        if not user_input:
+            continue
+
+        if user_input.lower() == "quit":
+            print("Goodbye!")
+            break
+
+        if user_input.lower() == "reset":
+            assistant.reset()
+            print("Conversation reset.")
+            continue
+
+        # Get response (streaming)
+        print("Assistant: ", end="", flush=True)
+        for chunk in assistant.send_message_stream(user_input):
+            print(chunk, end="", flush=True)
+        print()
+
+
+def run_api(assistant: ConversationalAssistant, config: Config):
+    """Run the API interface."""
+    try:
+        from api import create_app
+
+        app = create_app(assistant)
+        import uvicorn
+
+        uvicorn.run(app, host=config.api_host, port=config.api_port)
+    except ImportError:
+        print("API dependencies not installed. Run: pip install fastapi uvicorn")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

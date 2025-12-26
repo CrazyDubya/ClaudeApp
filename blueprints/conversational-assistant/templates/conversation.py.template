@@ -1,0 +1,94 @@
+"""
+Conversation Manager
+
+Handles conversation history, context strategies,
+and message formatting.
+"""
+
+from typing import Literal
+from dataclasses import dataclass, field
+
+
+@dataclass
+class Message:
+    """A single message in the conversation."""
+
+    role: Literal["user", "assistant"]
+    content: str
+
+
+class ConversationManager:
+    """
+    Manages conversation history and context.
+
+    Supports different context strategies:
+    - full: Keep all messages (may hit token limits)
+    - sliding: Keep the last N messages
+    - summary: Summarize older messages (not implemented)
+    """
+
+    def __init__(
+        self,
+        max_history: int = 50,
+        context_strategy: str = "sliding",
+    ):
+        """
+        Initialize the conversation manager.
+
+        Args:
+            max_history: Maximum messages to keep
+            context_strategy: How to handle long conversations
+        """
+        self.max_history = max_history
+        self.context_strategy = context_strategy
+        self.messages: list[Message] = []
+
+    def add_message(self, role: str, content: str):
+        """
+        Add a message to the conversation.
+
+        Args:
+            role: 'user' or 'assistant'
+            content: The message content
+        """
+        self.messages.append(Message(role=role, content=content))
+        self._apply_context_strategy()
+
+    def get_messages(self) -> list[dict]:
+        """
+        Get messages formatted for the API.
+
+        Returns:
+            List of message dictionaries
+        """
+        return [{"role": m.role, "content": m.content} for m in self.messages]
+
+    def clear(self):
+        """Clear all messages."""
+        self.messages = []
+
+    def _apply_context_strategy(self):
+        """Apply the configured context strategy."""
+        if self.context_strategy == "sliding":
+            self._apply_sliding_window()
+        elif self.context_strategy == "full":
+            pass  # Keep all messages
+        # Note: 'summary' strategy would require additional implementation
+
+    def _apply_sliding_window(self):
+        """Keep only the last N messages."""
+        if len(self.messages) > self.max_history:
+            self.messages = self.messages[-self.max_history :]
+
+    def get_token_estimate(self) -> int:
+        """
+        Estimate the token count of the conversation.
+
+        Returns:
+            Estimated token count
+        """
+        total_chars = sum(len(m.content) for m in self.messages)
+        return total_chars // 4  # Rough estimate
+
+    def __len__(self) -> int:
+        return len(self.messages)

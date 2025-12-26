@@ -1,0 +1,138 @@
+"""
+Document Processor - Main Entry Point
+
+Generated from the document-processor blueprint.
+Customize this file for your specific use case.
+"""
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+from processor import DocumentProcessor
+from config import Config
+
+
+def main():
+    """Main entry point for the document processor."""
+    parser = argparse.ArgumentParser(description="Process documents with Claude")
+    parser.add_argument("document", help="Path to document or document text")
+    parser.add_argument(
+        "--mode",
+        choices=["extract", "summarize", "classify", "custom"],
+        default="extract",
+        help="Processing mode",
+    )
+    parser.add_argument(
+        "--output",
+        choices=["json", "markdown", "text"],
+        default="json",
+        help="Output format",
+    )
+    parser.add_argument(
+        "--prompt",
+        help="Custom prompt for 'custom' mode",
+    )
+    parser.add_argument(
+        "--schema",
+        help="Path to extraction schema (JSON)",
+    )
+    parser.add_argument(
+        "-o", "--output-file",
+        help="Write output to file",
+    )
+
+    args = parser.parse_args()
+
+    # Load configuration
+    config = Config.from_env()
+
+    # Create processor
+    processor = DocumentProcessor(config)
+
+    # Load document
+    document = load_document(args.document)
+
+    # Process based on mode
+    if args.mode == "extract":
+        schema = load_schema(args.schema) if args.schema else None
+        result = processor.extract(document, schema=schema)
+    elif args.mode == "summarize":
+        result = processor.summarize(document)
+    elif args.mode == "classify":
+        result = processor.classify(document)
+    elif args.mode == "custom":
+        if not args.prompt:
+            print("Error: --prompt required for custom mode")
+            sys.exit(1)
+        result = processor.process_custom(document, args.prompt)
+    else:
+        print(f"Unknown mode: {args.mode}")
+        sys.exit(1)
+
+    # Format output
+    output = format_output(result, args.output)
+
+    # Write or print output
+    if args.output_file:
+        Path(args.output_file).write_text(output)
+        print(f"Output written to {args.output_file}")
+    else:
+        print(output)
+
+
+def load_document(path_or_text: str) -> str:
+    """Load document from file or use as text."""
+    path = Path(path_or_text)
+    if path.exists():
+        return path.read_text()
+    return path_or_text
+
+
+def load_schema(path: str) -> dict:
+    """Load extraction schema from JSON file."""
+    with open(path) as f:
+        return json.load(f)
+
+
+def format_output(result: dict, format_type: str) -> str:
+    """Format the result for output."""
+    if format_type == "json":
+        return json.dumps(result, indent=2)
+    elif format_type == "markdown":
+        return format_as_markdown(result)
+    elif format_type == "text":
+        return format_as_text(result)
+    return str(result)
+
+
+def format_as_markdown(result: dict) -> str:
+    """Format result as markdown."""
+    lines = ["# Document Processing Results", ""]
+
+    for key, value in result.items():
+        lines.append(f"## {key.replace('_', ' ').title()}")
+        if isinstance(value, list):
+            for item in value:
+                lines.append(f"- {item}")
+        elif isinstance(value, dict):
+            for k, v in value.items():
+                lines.append(f"- **{k}**: {v}")
+        else:
+            lines.append(str(value))
+        lines.append("")
+
+    return "\n".join(lines)
+
+
+def format_as_text(result: dict) -> str:
+    """Format result as plain text."""
+    lines = []
+    for key, value in result.items():
+        lines.append(f"{key}: {value}")
+    return "\n".join(lines)
+
+
+if __name__ == "__main__":
+    main()

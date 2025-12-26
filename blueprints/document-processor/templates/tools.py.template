@@ -1,0 +1,223 @@
+"""
+Document Processor - Tool Definitions
+
+Defines the tools available for document processing.
+Customize these tools for your specific extraction needs.
+"""
+
+from typing import Optional
+
+# Default extraction tools
+EXTRACTION_TOOLS = [
+    {
+        "name": "extract_entities",
+        "description": "Extract named entities from the document",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "people": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Names of people mentioned",
+                },
+                "organizations": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Names of organizations mentioned",
+                },
+                "locations": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Locations mentioned",
+                },
+                "dates": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Dates mentioned",
+                },
+                "amounts": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "value": {"type": "string"},
+                            "currency": {"type": "string"},
+                            "context": {"type": "string"},
+                        },
+                    },
+                    "description": "Monetary amounts mentioned",
+                },
+            },
+        },
+    },
+    {
+        "name": "extract_key_info",
+        "description": "Extract key information and metadata",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "description": "Document title if present",
+                },
+                "date": {
+                    "type": "string",
+                    "description": "Document date if present",
+                },
+                "author": {
+                    "type": "string",
+                    "description": "Document author if present",
+                },
+                "summary": {
+                    "type": "string",
+                    "description": "Brief summary of the document",
+                },
+                "key_points": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Key points from the document",
+                },
+            },
+        },
+    },
+]
+
+# Contract-specific tools
+CONTRACT_TOOLS = [
+    {
+        "name": "extract_contract_info",
+        "description": "Extract information from a contract",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "parties": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {"type": "string"},
+                            "role": {"type": "string"},
+                        },
+                    },
+                    "description": "Parties to the contract",
+                },
+                "effective_date": {
+                    "type": "string",
+                    "description": "When the contract becomes effective",
+                },
+                "termination_date": {
+                    "type": "string",
+                    "description": "When the contract terminates",
+                },
+                "value": {
+                    "type": "string",
+                    "description": "Total contract value",
+                },
+                "key_terms": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Key terms and conditions",
+                },
+                "obligations": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "party": {"type": "string"},
+                            "obligation": {"type": "string"},
+                        },
+                    },
+                    "description": "Obligations of each party",
+                },
+            },
+            "required": ["parties", "effective_date"],
+        },
+    },
+]
+
+# Invoice-specific tools
+INVOICE_TOOLS = [
+    {
+        "name": "extract_invoice_info",
+        "description": "Extract information from an invoice",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "invoice_number": {"type": "string"},
+                "invoice_date": {"type": "string"},
+                "due_date": {"type": "string"},
+                "vendor": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string"},
+                        "address": {"type": "string"},
+                    },
+                },
+                "customer": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string"},
+                        "address": {"type": "string"},
+                    },
+                },
+                "line_items": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "description": {"type": "string"},
+                            "quantity": {"type": "number"},
+                            "unit_price": {"type": "number"},
+                            "total": {"type": "number"},
+                        },
+                    },
+                },
+                "subtotal": {"type": "number"},
+                "tax": {"type": "number"},
+                "total": {"type": "number"},
+            },
+            "required": ["invoice_number", "total"],
+        },
+    },
+]
+
+
+def get_tool_definitions(schema: Optional[dict] = None) -> list[dict]:
+    """
+    Get tool definitions based on schema or defaults.
+
+    Args:
+        schema: Optional custom schema defining extraction fields
+
+    Returns:
+        List of tool definitions
+    """
+    if not schema:
+        return EXTRACTION_TOOLS
+
+    # Convert schema to tool definition
+    return [
+        {
+            "name": "extract_custom",
+            "description": "Extract information according to the provided schema",
+            "input_schema": schema,
+        }
+    ]
+
+
+def get_tools_for_document_type(doc_type: str) -> list[dict]:
+    """
+    Get appropriate tools based on document type.
+
+    Args:
+        doc_type: Type of document (contract, invoice, general)
+
+    Returns:
+        List of tool definitions
+    """
+    tools_map = {
+        "contract": CONTRACT_TOOLS,
+        "invoice": INVOICE_TOOLS,
+        "general": EXTRACTION_TOOLS,
+    }
+    return tools_map.get(doc_type, EXTRACTION_TOOLS)
