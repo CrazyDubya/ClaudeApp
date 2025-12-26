@@ -38,22 +38,22 @@ This roadmap outlines the evolution of Claude App Forge from initial prototype t
 
 **Focus**: Complete fundamental curriculum
 
-**Fundamentals Nodes (2/4 complete):**
+**Fundamentals Nodes (4/4 complete):**
 - [x] sdk-setup - README and example complete
-- [ ] api-keys - Not yet created
+- [x] api-keys - README and example complete
 - [x] first-message - README and example complete
-- [ ] model-selection - Not yet created
+- [x] model-selection - README and example complete
 
-**Messaging Nodes (1/6 complete):**
-- [ ] message-structure - Not yet created
-- [ ] system-prompts - Not yet created
+**Messaging Nodes (6/6 complete):**
+- [x] message-structure - README and example complete
+- [x] system-prompts - README and example complete
 - [x] streaming - README and example complete
-- [ ] multi-turn - Not yet created
-- [ ] context-management - Not yet created
-- [ ] vision - Not yet created
+- [x] multi-turn - README and example complete
+- [x] context-management - README and example complete
+- [x] vision - README and example complete
 
 **Infrastructure:**
-- [ ] Interactive exercises for each node (partial - basic examples only)
+- [ ] Interactive exercises for each node (examples complete, exercises pending)
 - [ ] Node validation tests
 - [ ] Cross-reference documentation
 
